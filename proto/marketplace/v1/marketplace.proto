@@ -1,0 +1,194 @@
+syntax = "proto3";
+
+package marketplace.v1;
+
+option go_package = "github.com/demo-marketplace/gen/go/marketplace/v1;marketplacev1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+service MarketplaceService {
+  rpc GetHealth(GetHealthRequest) returns (GetHealthResponse) {
+    option (google.api.http) = {get: "/health"};
+  }
+
+  // Categories
+  rpc CreateCategory(CreateCategoryRequest) returns (CreateCategoryResponse) {
+    option (google.api.http) = {
+      post: "/v1/categories"
+      body: "category"
+    };
+  }
+
+  rpc ListCategories(ListCategoriesRequest) returns (ListCategoriesResponse) {
+    option (google.api.http) = {get: "/v1/categories"};
+  }
+
+  rpc DeleteCategory(DeleteCategoryRequest) returns (DeleteCategoryResponse) {
+    option (google.api.http) = {delete: "/v1/categories/{id}"};
+  }
+
+  // Applications
+  rpc CreateApplication(CreateApplicationRequest) returns (CreateApplicationResponse) {
+    option (google.api.http) = {
+      post: "/v1/applications"
+      body: "application"
+    };
+  }
+
+  rpc GetApplication(GetApplicationRequest) returns (GetApplicationResponse) {
+    option (google.api.http) = {get: "/v1/applications/{id}"};
+  }
+
+  rpc ListApplications(ListApplicationsRequest) returns (ListApplicationsResponse) {
+    option (google.api.http) = {get: "/v1/applications"};
+  }
+
+  rpc UpdateApplication(UpdateApplicationRequest) returns (UpdateApplicationResponse) {
+    option (google.api.http) = {
+      put: "/v1/applications/{application.id}"
+      body: "application"
+    };
+  }
+
+  rpc DeleteApplication(DeleteApplicationRequest) returns (DeleteApplicationResponse) {
+    option (google.api.http) = {delete: "/v1/applications/{id}"};
+  }
+
+  // Connections
+  rpc CreateConnection(CreateConnectionRequest) returns (CreateConnectionResponse) {
+    option (google.api.http) = {
+      post: "/v1/connections"
+      body: "connection"
+    };
+  }
+
+  rpc ListConnectionsByApplication(ListConnectionsByApplicationRequest) returns (ListConnectionsByApplicationResponse) {
+    option (google.api.http) = {get: "/v1/applications/{application_id}/connections"};
+  }
+
+  rpc UpdateConnectionStatus(UpdateConnectionStatusRequest) returns (UpdateConnectionStatusResponse) {
+    option (google.api.http) = {
+      patch: "/v1/connections/{id}"
+      body: "*"
+    };
+  }
+
+  rpc DeleteConnection(DeleteConnectionRequest) returns (DeleteConnectionResponse) {
+    option (google.api.http) = {delete: "/v1/connections/{id}"};
+  }
+}
+
+// Health
+message GetHealthRequest {}
+message GetHealthResponse {
+  string status = 1;
+}
+
+// Category
+message Category {
+  string id = 1;
+  string name = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+}
+
+message CreateCategoryRequest {
+  Category category = 1;
+}
+message CreateCategoryResponse {
+  Category category = 1;
+}
+
+message ListCategoriesRequest {}
+message ListCategoriesResponse {
+  repeated Category categories = 1;
+}
+
+message DeleteCategoryRequest {
+  string id = 1;
+}
+message DeleteCategoryResponse {}
+
+// Application
+message Application {
+  string id = 1;
+  string name = 2;
+  string display_name = 3;
+  string description = 4;
+  bool active = 5;
+  bool visible = 6;
+  string category_id = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+}
+
+message CreateApplicationRequest {
+  Application application = 1;
+}
+message CreateApplicationResponse {
+  Application application = 1;
+}
+
+message GetApplicationRequest {
+  string id = 1;
+}
+message GetApplicationResponse {
+  Application application = 1;
+}
+
+message ListApplicationsRequest {
+  bool active_only = 1;
+}
+message ListApplicationsResponse {
+  repeated Application applications = 1;
+}
+
+message UpdateApplicationRequest {
+  Application application = 1;
+}
+message UpdateApplicationResponse {
+  Application application = 1;
+}
+
+message DeleteApplicationRequest {
+  string id = 1;
+}
+message DeleteApplicationResponse {}
+
+// Connection
+message Connection {
+  string id = 1;
+  string application_id = 2;
+  string merchant_id = 3;
+  string status = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
+
+message CreateConnectionRequest {
+  Connection connection = 1;
+}
+message CreateConnectionResponse {
+  Connection connection = 1;
+}
+
+message ListConnectionsByApplicationRequest {
+  string application_id = 1;
+}
+message ListConnectionsByApplicationResponse {
+  repeated Connection connections = 1;
+}
+
+message UpdateConnectionStatusRequest {
+  string id = 1;
+  string status = 2;
+}
+message UpdateConnectionStatusResponse {
+  Connection connection = 1;
+}
+
+message DeleteConnectionRequest {
+  string id = 1;
+}
+message DeleteConnectionResponse {}

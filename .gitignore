@@ -1,0 +1,4 @@
+/marketplace
+*.exe
+.env
+vendor/
