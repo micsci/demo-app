@@ -79,6 +79,30 @@ func (m *mockStore) DeleteConnection(ctx context.Context, id uuid.UUID) error {
 	return m.Called(ctx, id).Error(0)
 }
 
+func (m *mockStore) CreateReview(ctx context.Context, review model.Review) (model.Review, error) {
+	args := m.Called(ctx, review)
+	return args.Get(0).(model.Review), args.Error(1)
+}
+
+func (m *mockStore) ListReviewsByApp(ctx context.Context, appID uuid.UUID) ([]model.Review, error) {
+	args := m.Called(ctx, appID)
+	return args.Get(0).([]model.Review), args.Error(1)
+}
+
+func (m *mockStore) GetAverageRating(ctx context.Context, appID uuid.UUID) (float64, error) {
+	args := m.Called(ctx, appID)
+	return args.Get(0).(float64), args.Error(1)
+}
+
+func (m *mockStore) DeleteReview(ctx context.Context, id uuid.UUID) error {
+	return m.Called(ctx, id).Error(0)
+}
+
+func (m *mockStore) SearchReviews(ctx context.Context, appID uuid.UUID, keyword string) ([]model.Review, error) {
+	args := m.Called(ctx, appID, keyword)
+	return args.Get(0).([]model.Review), args.Error(1)
+}
+
 func TestCreateApplication(t *testing.T) {
 	ctx := context.Background()
 	catID := uuid.New()
@@ -172,5 +196,61 @@ func TestCreateConnection(t *testing.T) {
 		_, err := svc.UpdateConnectionStatus(ctx, uuid.New(), "invalid")
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "invalid status")
+	})
+}
+
+func TestCreateReview(t *testing.T) {
+	ctx := context.Background()
+	appID := uuid.New()
+
+	t.Run("success", func(t *testing.T) {
+		store := new(mockStore)
+		svc := service.New(store)
+
+		review := model.Review{
+			ApplicationID: appID,
+			AuthorEmail:   "user@example.com",
+			Rating:        5,
+			Comment:       "Great app!",
+		}
+
+		store.On("CreateReview", ctx, review).Return(model.Review{
+			ID:            uuid.New(),
+			ApplicationID: appID,
+			AuthorEmail:   "user@example.com",
+			Rating:        5,
+			Comment:       "Great app!",
+		}, nil)
+
+		result, err := svc.CreateReview(ctx, review)
+		assert.NoError(t, err)
+		assert.Equal(t, "Great app!", result.Comment)
+		store.AssertExpectations(t)
+	})
+
+	t.Run("empty email", func(t *testing.T) {
+		store := new(mockStore)
+		svc := service.New(store)
+
+		_, err := svc.CreateReview(ctx, model.Review{
+			ApplicationID: appID,
+			Rating:        5,
+			Comment:       "Nice",
+		})
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "author email is required")
+	})
+
+	t.Run("empty comment", func(t *testing.T) {
+		store := new(mockStore)
+		svc := service.New(store)
+
+		_, err := svc.CreateReview(ctx, model.Review{
+			ApplicationID: appID,
+			AuthorEmail:   "user@example.com",
+			Rating:        3,
+		})
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "review comment is required")
 	})
 }

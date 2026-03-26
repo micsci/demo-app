@@ -13,6 +13,7 @@ type Application struct {
 	Description string    `json:"description" db:"description"`
 	Active      bool      `json:"active" db:"active"`
 	Visible     bool      `json:"visible" db:"visible"`
+	Price       float64   `json:"price" db:"price"`
 	CategoryID  uuid.UUID `json:"categoryId" db:"category_id"`
 	CreatedAt   time.Time `json:"createdAt" db:"created_at"`
 	UpdatedAt   time.Time `json:"updatedAt" db:"updated_at"`
@@ -39,3 +40,13 @@ const (
 	ConnectionStatusActive   = "active"
 	ConnectionStatusInactive = "inactive"
 )
+
+type Review struct {
+	ID            uuid.UUID `json:"id" db:"id"`
+	ApplicationID uuid.UUID `json:"applicationId" db:"application_id"`
+	AuthorEmail   string    `json:"authorEmail" db:"author_email"`
+	Rating        int       `json:"rating" db:"rating"`
+	Comment       string    `json:"comment" db:"comment"`
+	CreatedAt     time.Time `json:"createdAt" db:"created_at"`
+	UpdatedAt     time.Time `json:"updatedAt" db:"updated_at"`
+}

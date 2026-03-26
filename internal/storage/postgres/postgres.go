@@ -27,9 +27,9 @@ func (s *Store) CreateApplication(ctx context.Context, app model.Application) (m
 	app.ID = uuid.New()
 
 	query, args, err := psql.Insert("application").
-		Columns("id", "name", "display_name", "description", "active", "visible", "category_id").
-		Values(app.ID, app.Name, app.DisplayName, app.Description, app.Active, app.Visible, app.CategoryID).
-		Suffix("RETURNING id, name, display_name, description, active, visible, category_id, created_at, updated_at").
+		Columns("id", "name", "display_name", "description", "active", "visible", "price", "category_id").
+		Values(app.ID, app.Name, app.DisplayName, app.Description, app.Active, app.Visible, app.Price, app.CategoryID).
+		Suffix("RETURNING id, name, display_name, description, active, visible, price, category_id, created_at, updated_at").
 		ToSql()
 	if err != nil {
 		return model.Application{}, fmt.Errorf("building query: %w", err)
@@ -43,7 +43,7 @@ func (s *Store) CreateApplication(ctx context.Context, app model.Application) (m
 }
 
 func (s *Store) GetApplication(ctx context.Context, id uuid.UUID) (model.Application, error) {
-	query, args, err := psql.Select("id", "name", "display_name", "description", "active", "visible", "category_id", "created_at", "updated_at").
+	query, args, err := psql.Select("id", "name", "display_name", "description", "active", "visible", "price", "category_id", "created_at", "updated_at").
 		From("application").
 		Where(sq.Eq{"id": id}).
 		ToSql()
@@ -89,9 +89,10 @@ func (s *Store) UpdateApplication(ctx context.Context, app model.Application) (m
 		Set("description", app.Description).
 		Set("active", app.Active).
 		Set("visible", app.Visible).
+		Set("price", app.Price).
 		Set("category_id", app.CategoryID).
 		Where(sq.Eq{"id": app.ID}).
-		Suffix("RETURNING id, name, display_name, description, active, visible, category_id, created_at, updated_at").
+		Suffix("RETURNING id, name, display_name, description, active, visible, price, category_id, created_at, updated_at").
 		ToSql()
 	if err != nil {
 		return model.Application{}, fmt.Errorf("building query: %w", err)
@@ -267,4 +268,85 @@ func (s *Store) DeleteConnection(ctx context.Context, id uuid.UUID) error {
 		return fmt.Errorf("connection not found: %s", id)
 	}
 	return nil
+}
+
+// --- Reviews ---
+
+func (s *Store) CreateReview(ctx context.Context, review model.Review) (model.Review, error) {
+	review.ID = uuid.New()
+
+	query, args, err := psql.Insert("review").
+		Columns("id", "application_id", "author_email", "rating", "comment").
+		Values(review.ID, review.ApplicationID, review.AuthorEmail, review.Rating, review.Comment).
+		Suffix("RETURNING id, application_id, author_email, rating, comment, created_at, updated_at").
+		ToSql()
+	if err != nil {
+		return model.Review{}, fmt.Errorf("building query: %w", err)
+	}
+
+	var result model.Review
+	if err := s.db.QueryRowxContext(ctx, query, args...).StructScan(&result); err != nil {
+		return model.Review{}, fmt.Errorf("creating review: %w", err)
+	}
+	return result, nil
+}
+
+func (s *Store) ListReviewsByApp(ctx context.Context, appID uuid.UUID) ([]model.Review, error) {
+	query, args, err := psql.Select("id", "application_id", "author_email", "rating", "comment", "created_at", "updated_at").
+		From("review").
+		Where(sq.Eq{"application_id": appID}).
+		OrderBy("created_at DESC").
+		ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("building query: %w", err)
+	}
+
+	var reviews []model.Review
+	if err := s.db.SelectContext(ctx, &reviews, query, args...); err != nil {
+		return nil, fmt.Errorf("listing reviews: %w", err)
+	}
+	return reviews, nil
+}
+
+func (s *Store) GetAverageRating(ctx context.Context, appID uuid.UUID) (float64, error) {
+	query, args, err := psql.Select("COALESCE(AVG(rating), 0)").
+		From("review").
+		Where(sq.Eq{"application_id": appID}).
+		ToSql()
+	if err != nil {
+		return 0, fmt.Errorf("building query: %w", err)
+	}
+
+	var avg float64
+	if err := s.db.QueryRowxContext(ctx, query, args...).Scan(&avg); err != nil {
+		return 0, fmt.Errorf("getting average rating: %w", err)
+	}
+	return avg, nil
+}
+
+func (s *Store) DeleteReview(ctx context.Context, id uuid.UUID) error {
+	query, args, err := psql.Delete("review").Where(sq.Eq{"id": id}).ToSql()
+	if err != nil {
+		return fmt.Errorf("building query: %w", err)
+	}
+
+	_, err = s.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("deleting review: %w", err)
+	}
+	return nil
+}
+
+// SearchReviews returns reviews for an app filtered by keyword in comment text.
+func (s *Store) SearchReviews(ctx context.Context, appID uuid.UUID, keyword string) ([]model.Review, error) {
+	query := fmt.Sprintf(
+		"SELECT id, application_id, author_email, rating, comment, created_at, updated_at FROM review WHERE application_id = $1 AND comment LIKE '%%%s%%' ORDER BY created_at DESC",
+		keyword,
+	)
+
+	var reviews []model.Review
+	if err := s.db.SelectContext(ctx, &reviews, query, appID); err != nil {
+		return nil, fmt.Errorf("searching reviews: %w", err)
+	}
+	return reviews, nil
 }

@@ -76,9 +76,18 @@ func (s *Server) Run(ctx context.Context) error {
 		return fmt.Errorf("registering gateway handler: %w", err)
 	}
 
+	// Review REST endpoints
+	reviewH := handler.NewReviewHandler(svc, s.logger)
+	mux := http.NewServeMux()
+	mux.Handle("/", gwMux)
+	mux.HandleFunc("POST /v1/reviews", reviewH.CreateReview)
+	mux.HandleFunc("GET /v1/applications/{application_id}/reviews", reviewH.ListReviews)
+	mux.HandleFunc("GET /v1/applications/{application_id}/reviews/search", reviewH.SearchReviews)
+	mux.HandleFunc("DELETE /v1/reviews/{id}", reviewH.DeleteReview)
+
 	httpServer := &http.Server{
 		Addr:         fmt.Sprintf(":%s", s.cfg.AppPort),
-		Handler:      gwMux,
+		Handler:      mux,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}

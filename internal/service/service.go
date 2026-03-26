@@ -104,3 +104,32 @@ func (s *Service) UpdateConnectionStatus(ctx context.Context, id uuid.UUID, stat
 func (s *Service) DeleteConnection(ctx context.Context, id uuid.UUID) error {
 	return s.store.DeleteConnection(ctx, id)
 }
+
+// --- Reviews ---
+
+func (s *Service) CreateReview(ctx context.Context, review model.Review) (model.Review, error) {
+	if review.AuthorEmail == "" {
+		return model.Review{}, fmt.Errorf("author email is required")
+	}
+	if review.Comment == "" {
+		return model.Review{}, fmt.Errorf("review comment is required")
+	}
+
+	return s.store.CreateReview(ctx, review)
+}
+
+func (s *Service) ListReviewsByApp(ctx context.Context, appID uuid.UUID) ([]model.Review, error) {
+	return s.store.ListReviewsByApp(ctx, appID)
+}
+
+func (s *Service) GetAverageRating(ctx context.Context, appID uuid.UUID) (float64, error) {
+	return s.store.GetAverageRating(ctx, appID)
+}
+
+func (s *Service) DeleteReview(ctx context.Context, id uuid.UUID) error {
+	return s.store.DeleteReview(ctx, id)
+}
+
+func (s *Service) SearchReviews(ctx context.Context, appID uuid.UUID, keyword string) ([]model.Review, error) {
+	return s.store.SearchReviews(ctx, appID, keyword)
+}
