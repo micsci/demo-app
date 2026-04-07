@@ -268,3 +268,75 @@ func (s *Store) DeleteConnection(ctx context.Context, id uuid.UUID) error {
 	}
 	return nil
 }
+
+// --- Reviews ---
+
+func (s *Store) CreateReview(ctx context.Context, review model.Review) (model.Review, error) {
+	review.ID = uuid.New()
+
+	query, args, err := psql.Insert("review").
+		Columns("id", "application_id", "merchant_id", "rating", "body").
+		Values(review.ID, review.ApplicationID, review.MerchantID, review.Rating, review.Body).
+		Suffix("RETURNING id, application_id, merchant_id, rating, body, created_at, updated_at").
+		ToSql()
+	if err != nil {
+		return model.Review{}, fmt.Errorf("building query: %w", err)
+	}
+
+	var result model.Review
+	if err := s.db.QueryRowxContext(ctx, query, args...).StructScan(&result); err != nil {
+		return model.Review{}, fmt.Errorf("creating review: %w", err)
+	}
+	return result, nil
+}
+
+func (s *Store) ListReviewsByApp(ctx context.Context, appID uuid.UUID) ([]model.Review, error) {
+	query, args, err := psql.Select("id", "application_id", "merchant_id", "rating", "body", "created_at", "updated_at").
+		From("review").
+		Where(sq.Eq{"application_id": appID}).
+		OrderBy("created_at DESC").
+		ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("building query: %w", err)
+	}
+
+	var reviews []model.Review
+	if err := s.db.SelectContext(ctx, &reviews, query, args...); err != nil {
+		return nil, fmt.Errorf("listing reviews: %w", err)
+	}
+	return reviews, nil
+}
+
+func (s *Store) GetAverageRating(ctx context.Context, appID uuid.UUID) (float64, error) {
+	query, args, err := psql.Select("COALESCE(AVG(rating), 0)").
+		From("review").
+		Where(sq.Eq{"application_id": appID}).
+		ToSql()
+	if err != nil {
+		return 0, fmt.Errorf("building query: %w", err)
+	}
+
+	var avg float64
+	if err := s.db.QueryRowxContext(ctx, query, args...).Scan(&avg); err != nil {
+		return 0, fmt.Errorf("getting average rating: %w", err)
+	}
+	return avg, nil
+}
+
+func (s *Store) DeleteReview(ctx context.Context, id uuid.UUID) error {
+	query, args, err := psql.Delete("review").Where(sq.Eq{"id": id}).ToSql()
+	if err != nil {
+		return fmt.Errorf("building query: %w", err)
+	}
+
+	result, err := s.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("deleting review: %w", err)
+	}
+
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return fmt.Errorf("review not found: %s", id)
+	}
+	return nil
+}
