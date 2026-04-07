@@ -32,6 +32,9 @@ const (
 	MarketplaceService_ListConnectionsByApplication_FullMethodName = "/marketplace.v1.MarketplaceService/ListConnectionsByApplication"
 	MarketplaceService_UpdateConnectionStatus_FullMethodName       = "/marketplace.v1.MarketplaceService/UpdateConnectionStatus"
 	MarketplaceService_DeleteConnection_FullMethodName             = "/marketplace.v1.MarketplaceService/DeleteConnection"
+	MarketplaceService_CreateReview_FullMethodName                 = "/marketplace.v1.MarketplaceService/CreateReview"
+	MarketplaceService_ListReviewsByApplication_FullMethodName     = "/marketplace.v1.MarketplaceService/ListReviewsByApplication"
+	MarketplaceService_DeleteReview_FullMethodName                 = "/marketplace.v1.MarketplaceService/DeleteReview"
 )
 
 // MarketplaceServiceClient is the client API for MarketplaceService service.
@@ -54,6 +57,10 @@ type MarketplaceServiceClient interface {
 	ListConnectionsByApplication(ctx context.Context, in *ListConnectionsByApplicationRequest, opts ...grpc.CallOption) (*ListConnectionsByApplicationResponse, error)
 	UpdateConnectionStatus(ctx context.Context, in *UpdateConnectionStatusRequest, opts ...grpc.CallOption) (*UpdateConnectionStatusResponse, error)
 	DeleteConnection(ctx context.Context, in *DeleteConnectionRequest, opts ...grpc.CallOption) (*DeleteConnectionResponse, error)
+	// Reviews
+	CreateReview(ctx context.Context, in *CreateReviewRequest, opts ...grpc.CallOption) (*CreateReviewResponse, error)
+	ListReviewsByApplication(ctx context.Context, in *ListReviewsByApplicationRequest, opts ...grpc.CallOption) (*ListReviewsByApplicationResponse, error)
+	DeleteReview(ctx context.Context, in *DeleteReviewRequest, opts ...grpc.CallOption) (*DeleteReviewResponse, error)
 }
 
 type marketplaceServiceClient struct {
@@ -194,6 +201,36 @@ func (c *marketplaceServiceClient) DeleteConnection(ctx context.Context, in *Del
 	return out, nil
 }
 
+func (c *marketplaceServiceClient) CreateReview(ctx context.Context, in *CreateReviewRequest, opts ...grpc.CallOption) (*CreateReviewResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateReviewResponse)
+	err := c.cc.Invoke(ctx, MarketplaceService_CreateReview_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *marketplaceServiceClient) ListReviewsByApplication(ctx context.Context, in *ListReviewsByApplicationRequest, opts ...grpc.CallOption) (*ListReviewsByApplicationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListReviewsByApplicationResponse)
+	err := c.cc.Invoke(ctx, MarketplaceService_ListReviewsByApplication_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *marketplaceServiceClient) DeleteReview(ctx context.Context, in *DeleteReviewRequest, opts ...grpc.CallOption) (*DeleteReviewResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteReviewResponse)
+	err := c.cc.Invoke(ctx, MarketplaceService_DeleteReview_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MarketplaceServiceServer is the server API for MarketplaceService service.
 // All implementations must embed UnimplementedMarketplaceServiceServer
 // for forward compatibility.
@@ -214,6 +251,10 @@ type MarketplaceServiceServer interface {
 	ListConnectionsByApplication(context.Context, *ListConnectionsByApplicationRequest) (*ListConnectionsByApplicationResponse, error)
 	UpdateConnectionStatus(context.Context, *UpdateConnectionStatusRequest) (*UpdateConnectionStatusResponse, error)
 	DeleteConnection(context.Context, *DeleteConnectionRequest) (*DeleteConnectionResponse, error)
+	// Reviews
+	CreateReview(context.Context, *CreateReviewRequest) (*CreateReviewResponse, error)
+	ListReviewsByApplication(context.Context, *ListReviewsByApplicationRequest) (*ListReviewsByApplicationResponse, error)
+	DeleteReview(context.Context, *DeleteReviewRequest) (*DeleteReviewResponse, error)
 	mustEmbedUnimplementedMarketplaceServiceServer()
 }
 
@@ -262,6 +303,15 @@ func (UnimplementedMarketplaceServiceServer) UpdateConnectionStatus(context.Cont
 }
 func (UnimplementedMarketplaceServiceServer) DeleteConnection(context.Context, *DeleteConnectionRequest) (*DeleteConnectionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteConnection not implemented")
+}
+func (UnimplementedMarketplaceServiceServer) CreateReview(context.Context, *CreateReviewRequest) (*CreateReviewResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateReview not implemented")
+}
+func (UnimplementedMarketplaceServiceServer) ListReviewsByApplication(context.Context, *ListReviewsByApplicationRequest) (*ListReviewsByApplicationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListReviewsByApplication not implemented")
+}
+func (UnimplementedMarketplaceServiceServer) DeleteReview(context.Context, *DeleteReviewRequest) (*DeleteReviewResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteReview not implemented")
 }
 func (UnimplementedMarketplaceServiceServer) mustEmbedUnimplementedMarketplaceServiceServer() {}
 func (UnimplementedMarketplaceServiceServer) testEmbeddedByValue()                            {}
@@ -518,6 +568,60 @@ func _MarketplaceService_DeleteConnection_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MarketplaceService_CreateReview_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateReviewRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MarketplaceServiceServer).CreateReview(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MarketplaceService_CreateReview_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MarketplaceServiceServer).CreateReview(ctx, req.(*CreateReviewRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MarketplaceService_ListReviewsByApplication_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListReviewsByApplicationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MarketplaceServiceServer).ListReviewsByApplication(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MarketplaceService_ListReviewsByApplication_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MarketplaceServiceServer).ListReviewsByApplication(ctx, req.(*ListReviewsByApplicationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MarketplaceService_DeleteReview_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteReviewRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MarketplaceServiceServer).DeleteReview(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MarketplaceService_DeleteReview_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MarketplaceServiceServer).DeleteReview(ctx, req.(*DeleteReviewRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // MarketplaceService_ServiceDesc is the grpc.ServiceDesc for MarketplaceService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -576,6 +680,18 @@ var MarketplaceService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteConnection",
 			Handler:    _MarketplaceService_DeleteConnection_Handler,
+		},
+		{
+			MethodName: "CreateReview",
+			Handler:    _MarketplaceService_CreateReview_Handler,
+		},
+		{
+			MethodName: "ListReviewsByApplication",
+			Handler:    _MarketplaceService_ListReviewsByApplication_Handler,
+		},
+		{
+			MethodName: "DeleteReview",
+			Handler:    _MarketplaceService_DeleteReview_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

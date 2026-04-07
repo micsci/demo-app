@@ -233,6 +233,71 @@ func (h *Handler) DeleteConnection(ctx context.Context, req *pb.DeleteConnection
 	return &pb.DeleteConnectionResponse{}, nil
 }
 
+// --- Reviews ---
+
+func (h *Handler) CreateReview(ctx context.Context, req *pb.CreateReviewRequest) (*pb.CreateReviewResponse, error) {
+	if req.GetReview() == nil {
+		return nil, status.Error(codes.InvalidArgument, "review is required")
+	}
+
+	appID, err := uuid.Parse(req.GetReview().GetApplicationId())
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid application_id")
+	}
+
+	review, err := h.svc.CreateReview(ctx, model.Review{
+		ApplicationID: appID,
+		MerchantID:    req.GetReview().GetMerchantId(),
+		Rating:        int(req.GetReview().GetRating()),
+		Body:          req.GetReview().GetBody(),
+	})
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	return &pb.CreateReviewResponse{Review: reviewToProto(review)}, nil
+}
+
+func (h *Handler) ListReviewsByApplication(ctx context.Context, req *pb.ListReviewsByApplicationRequest) (*pb.ListReviewsByApplicationResponse, error) {
+	appID, err := uuid.Parse(req.GetApplicationId())
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid application_id")
+	}
+
+	reviews, err := h.svc.ListReviewsByApp(ctx, appID)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	result := make([]*pb.Review, len(reviews))
+	for i, r := range reviews {
+		result[i] = reviewToProto(r)
+	}
+
+	// Fetch average rating separately for each application.
+	avg, err := h.svc.GetAverageRating(ctx, appID)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &pb.ListReviewsByApplicationResponse{
+		Reviews:       result,
+		AverageRating: avg,
+	}, nil
+}
+
+func (h *Handler) DeleteReview(ctx context.Context, req *pb.DeleteReviewRequest) (*pb.DeleteReviewResponse, error) {
+	id, err := uuid.Parse(req.GetId())
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid review id")
+	}
+
+	if err := h.svc.DeleteReview(ctx, id); err != nil {
+		return nil, status.Error(codes.NotFound, err.Error())
+	}
+	return &pb.DeleteReviewResponse{}, nil
+}
+
 // --- Proto converters ---
 
 func categoryToProto(c model.Category) *pb.Category {
@@ -266,6 +331,18 @@ func connectionToProto(c model.Connection) *pb.Connection {
 		Status:        c.Status,
 		CreatedAt:     timestamppb.New(c.CreatedAt),
 		UpdatedAt:     timestamppb.New(c.UpdatedAt),
+	}
+}
+
+func reviewToProto(r model.Review) *pb.Review {
+	return &pb.Review{
+		Id:            r.ID.String(),
+		ApplicationId: r.ApplicationID.String(),
+		MerchantId:    r.MerchantID,
+		Rating:        int32(r.Rating),
+		Body:          r.Body,
+		CreatedAt:     timestamppb.New(r.CreatedAt),
+		UpdatedAt:     timestamppb.New(r.UpdatedAt),
 	}
 }
 

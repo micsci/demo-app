@@ -29,8 +29,16 @@ type ConnectionStore interface {
 	DeleteConnection(ctx context.Context, id uuid.UUID) error
 }
 
+type ReviewStore interface {
+	CreateReview(ctx context.Context, review model.Review) (model.Review, error)
+	ListReviewsByApp(ctx context.Context, appID uuid.UUID) ([]model.Review, error)
+	GetAverageRating(ctx context.Context, appID uuid.UUID) (float64, error)
+	DeleteReview(ctx context.Context, id uuid.UUID) error
+}
+
 type Store interface {
 	ApplicationStore
 	CategoryStore
 	ConnectionStore
+	ReviewStore
 }

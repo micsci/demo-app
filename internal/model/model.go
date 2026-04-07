@@ -39,3 +39,13 @@ const (
 	ConnectionStatusActive   = "active"
 	ConnectionStatusInactive = "inactive"
 )
+
+type Review struct {
+	ID            uuid.UUID `json:"id" db:"id"`
+	ApplicationID uuid.UUID `json:"applicationId" db:"application_id"`
+	MerchantID    string    `json:"merchantId" db:"merchant_id"`
+	Rating        int       `json:"rating" db:"rating"`
+	Body          string    `json:"body" db:"body"`
+	CreatedAt     time.Time `json:"createdAt" db:"created_at"`
+	UpdatedAt     time.Time `json:"updatedAt" db:"updated_at"`
+}

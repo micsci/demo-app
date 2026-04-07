@@ -104,3 +104,33 @@ func (s *Service) UpdateConnectionStatus(ctx context.Context, id uuid.UUID, stat
 func (s *Service) DeleteConnection(ctx context.Context, id uuid.UUID) error {
 	return s.store.DeleteConnection(ctx, id)
 }
+
+// --- Reviews ---
+
+func (s *Service) CreateReview(ctx context.Context, review model.Review) (model.Review, error) {
+	if review.ApplicationID == uuid.Nil {
+		return model.Review{}, fmt.Errorf("application ID is required")
+	}
+	if review.MerchantID == "" {
+		return model.Review{}, fmt.Errorf("merchant ID is required")
+	}
+
+	// Verify the application exists.
+	if _, err := s.store.GetApplication(ctx, review.ApplicationID); err != nil {
+		return model.Review{}, fmt.Errorf("invalid application: %w", err)
+	}
+
+	return s.store.CreateReview(ctx, review)
+}
+
+func (s *Service) ListReviewsByApp(ctx context.Context, appID uuid.UUID) ([]model.Review, error) {
+	return s.store.ListReviewsByApp(ctx, appID)
+}
+
+func (s *Service) GetAverageRating(ctx context.Context, appID uuid.UUID) (float64, error) {
+	return s.store.GetAverageRating(ctx, appID)
+}
+
+func (s *Service) DeleteReview(ctx context.Context, id uuid.UUID) error {
+	return s.store.DeleteReview(ctx, id)
+}

@@ -77,6 +77,22 @@ service MarketplaceService {
   rpc DeleteConnection(DeleteConnectionRequest) returns (DeleteConnectionResponse) {
     option (google.api.http) = {delete: "/v1/connections/{id}"};
   }
+
+  // Reviews
+  rpc CreateReview(CreateReviewRequest) returns (CreateReviewResponse) {
+    option (google.api.http) = {
+      post: "/v1/reviews"
+      body: "review"
+    };
+  }
+
+  rpc ListReviewsByApplication(ListReviewsByApplicationRequest) returns (ListReviewsByApplicationResponse) {
+    option (google.api.http) = {get: "/v1/applications/{application_id}/reviews"};
+  }
+
+  rpc DeleteReview(DeleteReviewRequest) returns (DeleteReviewResponse) {
+    option (google.api.http) = {delete: "/v1/reviews/{id}"};
+  }
 }
 
 // Health
@@ -192,3 +208,34 @@ message DeleteConnectionRequest {
   string id = 1;
 }
 message DeleteConnectionResponse {}
+
+// Review
+message Review {
+  string id = 1;
+  string application_id = 2;
+  string merchant_id = 3;
+  int32 rating = 4;
+  string body = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+}
+
+message CreateReviewRequest {
+  Review review = 1;
+}
+message CreateReviewResponse {
+  Review review = 1;
+}
+
+message ListReviewsByApplicationRequest {
+  string application_id = 1;
+}
+message ListReviewsByApplicationResponse {
+  repeated Review reviews = 1;
+  double average_rating = 2;
+}
+
+message DeleteReviewRequest {
+  string id = 1;
+}
+message DeleteReviewResponse {}
